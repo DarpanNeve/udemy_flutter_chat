@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:udemy_flutter_chat/widget/show_snack_bar.dart';
+import 'package:udemy_flutter_chat/widget/user_image_picker.dart';
 
 final _firebase = FirebaseAuth.instance;
 
@@ -16,14 +21,23 @@ class _AuthScreenState extends State<AuthScreen> {
   var _email = '';
   var _password = '';
   bool _isLogin = true;
+  File? _userImageFile;
+  bool _isAuthenticating = false;
 
   void _submit() async {
     final isValid = _formKey.currentState!.validate();
     if (!isValid) {
       return;
     }
+    if (_userImageFile == null && !_isLogin) {
+      errorSnackBar(context, 'Please pick an image.');
+      return;
+    }
     _formKey.currentState!.save();
     try {
+      setState(() {
+        _isAuthenticating = true;
+      });
       if (_isLogin) {
         await _firebase.signInWithEmailAndPassword(
           email: _email,
@@ -34,6 +48,21 @@ class _AuthScreenState extends State<AuthScreen> {
           email: _email,
           password: _password,
         );
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('user_image')
+            .child('${_firebase.currentUser!.uid}.jpg');
+        await storageRef.putFile(_userImageFile!);
+        final url = await storageRef.getDownloadURL();
+        print('the link of the image is $url');
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(_firebase.currentUser!.uid)
+            .set({
+          'username': 'to be done',
+          'email': _email,
+          'image_url': url,
+        });
       }
     } on FirebaseAuthException catch (error) {
       var message = 'An error occurred, please check your credentials!';
@@ -41,8 +70,14 @@ class _AuthScreenState extends State<AuthScreen> {
         message = error.message!;
       }
       if (mounted) errorSnackBar(context, message);
+      setState(() {
+        _isAuthenticating = false;
+      });
     } catch (error) {
       if (mounted) errorSnackBar(context, error.toString());
+      setState(() {
+        _isAuthenticating = false;
+      });
     }
   }
 
@@ -82,6 +117,12 @@ class _AuthScreenState extends State<AuthScreen> {
                       padding: const EdgeInsets.all(20.0),
                       child: Column(
                         children: [
+                          if (!_isLogin)
+                            UserImagePicker(
+                              imagePickFn: (pickedImageFile) {
+                                _userImageFile = pickedImageFile;
+                              },
+                            ),
                           TextFormField(
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
@@ -118,20 +159,23 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: _submit,
-                  child: Text(_isLogin ? 'Login' : 'Signup'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _isLogin = !_isLogin;
-                    });
-                  },
-                  child: Text(_isLogin
-                      ? 'Create new account'
-                      : 'I already have an account'),
-                ),
+                if (_isAuthenticating) const CircularProgressIndicator(),
+                if (!_isAuthenticating)
+                  ElevatedButton(
+                    onPressed: _submit,
+                    child: Text(_isLogin ? 'Login' : 'Signup'),
+                  ),
+                if (!_isAuthenticating)
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isLogin = !_isLogin;
+                      });
+                    },
+                    child: Text(_isLogin
+                        ? 'Create new account'
+                        : 'I already have an account'),
+                  ),
               ],
             ),
           ),
