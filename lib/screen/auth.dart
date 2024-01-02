@@ -23,6 +23,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
   File? _userImageFile;
   bool _isAuthenticating = false;
+  var _username = '';
 
   void _submit() async {
     final isValid = _formKey.currentState!.validate();
@@ -54,12 +55,11 @@ class _AuthScreenState extends State<AuthScreen> {
             .child('${_firebase.currentUser!.uid}.jpg');
         await storageRef.putFile(_userImageFile!);
         final url = await storageRef.getDownloadURL();
-        print('the link of the image is $url');
         FirebaseFirestore.instance
             .collection('users')
             .doc(_firebase.currentUser!.uid)
             .set({
-          'username': 'to be done',
+          'username': _username,
           'email': _email,
           'image_url': url,
         });
@@ -84,6 +84,8 @@ class _AuthScreenState extends State<AuthScreen> {
   void ondispose() {
     _email = '';
     _password = '';
+    _username = '';
+    _userImageFile = null;
     super.dispose();
   }
 
@@ -121,6 +123,22 @@ class _AuthScreenState extends State<AuthScreen> {
                             UserImagePicker(
                               imagePickFn: (pickedImageFile) {
                                 _userImageFile = pickedImageFile;
+                              },
+                            ),
+                          if (!_isLogin)
+                            TextFormField(
+                              decoration:
+                                  const InputDecoration(labelText: 'UserName'),
+                              textCapitalization: TextCapitalization.none,
+                              enableSuggestions: false,
+                              validator: (value) {
+                                if (value!.isEmpty || value.trim().length < 4) {
+                                  return 'Please enter at least 4 characters';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) {
+                                _username = value!;
                               },
                             ),
                           TextFormField(
