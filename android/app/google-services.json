@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "523238709382",
+    "firebase_url": "https://udem-88794-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "udem-88794",
+    "storage_bucket": "udem-88794.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:523238709382:android:393b0ea25ed28f28245907",
+        "android_client_info": {
+          "package_name": "com.example.udemy_flutter_chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "523238709382-8do6i1l1p3qunid6g541qeir3fdmoj69.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCZeGV3KQ5ksJPOzhPXR7uFX-uqG-YrDTY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "523238709382-8do6i1l1p3qunid6g541qeir3fdmoj69.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
